@@ -1,29 +1,29 @@
 import os
 import logging
-from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 from openai import OpenAI
 
-# Логирование для отладки
+# Логирование
 logging.basicConfig(level=logging.INFO)
 logging.info("Бот запускается...")
 
-# Получаем токены из переменных окружения
+# Ключи
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-
-logging.info(f"TELEGRAM_TOKEN: {'OK' if TELEGRAM_TOKEN else 'НЕ ЗАДАН'}")
-logging.info(f"OPENAI_API_KEY: {'OK' if OPENAI_API_KEY else 'НЕ ЗАДАН'}")
 
 if not TELEGRAM_TOKEN or not OPENAI_API_KEY:
     raise ValueError("TELEGRAM_TOKEN или OPENAI_API_KEY не заданы!")
 
-# Инициализация клиента OpenAI
+# Инициализация OpenAI
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-async def start(update: ContextTypes.DEFAULT_TYPE, context: ContextTypes.DEFAULT_TYPE):
+# Команда /start
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Привет! Я твой ChatGPT-бот. Напиши мне что-нибудь.")
 
-async def chat(update: ContextTypes.DEFAULT_TYPE, context: ContextTypes.DEFAULT_TYPE):
+# Обработка текстовых сообщений
+async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
     try:
         response = client.chat.completions.create(
@@ -35,11 +35,12 @@ async def chat(update: ContextTypes.DEFAULT_TYPE, context: ContextTypes.DEFAULT_
         logging.error(f"Ошибка OpenAI: {e}")
         await update.message.reply_text("Произошла ошибка при обращении к OpenAI API.")
 
+# Главная функция
 def main():
-    app = Application.builder().token(TELEGRAM_TOKEN).build()
+    app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
-    print("Бот запущен!")
+    logging.info("Бот запущен!")
     app.run_polling()
 
 if __name__ == "__main__":
