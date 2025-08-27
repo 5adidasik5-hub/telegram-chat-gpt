@@ -1,7 +1,6 @@
 import os
 import logging
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 from openai import OpenAI
 
 # Логирование
@@ -15,15 +14,13 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not TELEGRAM_TOKEN or not OPENAI_API_KEY:
     raise ValueError("TELEGRAM_TOKEN или OPENAI_API_KEY не заданы!")
 
-# Инициализация OpenAI
+# Клиент OpenAI
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-# Команда /start
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start(update: ContextTypes.DEFAULT_TYPE, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Привет! Я твой ChatGPT-бот. Напиши мне что-нибудь.")
 
-# Обработка текстовых сообщений
-async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def chat(update: ContextTypes.DEFAULT_TYPE, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
     try:
         response = client.chat.completions.create(
@@ -35,9 +32,8 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logging.error(f"Ошибка OpenAI: {e}")
         await update.message.reply_text("Произошла ошибка при обращении к OpenAI API.")
 
-# Главная функция
 def main():
-    app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+    app = Application.builder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
     logging.info("Бот запущен!")
