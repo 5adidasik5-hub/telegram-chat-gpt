@@ -3,14 +3,21 @@ import logging
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 from openai import OpenAI
 
+# Логирование для отладки
 logging.basicConfig(level=logging.INFO)
+logging.info("Бот запускается...")
 
+# Получаем токены из переменных окружения
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+logging.info(f"TELEGRAM_TOKEN: {'OK' if TELEGRAM_TOKEN else 'НЕ ЗАДАН'}")
+logging.info(f"OPENAI_API_KEY: {'OK' if OPENAI_API_KEY else 'НЕ ЗАДАН'}")
 
 if not TELEGRAM_TOKEN or not OPENAI_API_KEY:
     raise ValueError("TELEGRAM_TOKEN или OPENAI_API_KEY не заданы!")
 
+# Инициализация клиента OpenAI
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 async def start(update: ContextTypes.DEFAULT_TYPE, context: ContextTypes.DEFAULT_TYPE):
